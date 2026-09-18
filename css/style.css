@@ -75,7 +75,7 @@
     font-size:.78rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
     color:var(--verde-oscuro); margin-bottom:18px;
   }
-  .kicker::before{ content:"§"; color:var(--dorado); font-size:1.1rem; }
+  .kicker::before{ content:""; display:inline-block; width:16px; height:2px; background:var(--dorado); }
 
   .hero h1{
     font-size:clamp(2.3rem, 5.2vw, 3.6rem);
@@ -122,14 +122,6 @@
   /* ===== SECCIÓN GENÉRICA ===== */
   section{ padding:64px 0; border-bottom:2px solid var(--tinta); position:relative; }
   section.no-border{ border-bottom:none; }
-  .eyebrow-num{
-    font-family:'Fraunces', serif;
-    font-size:clamp(3rem, 7vw, 5rem);
-    color:var(--dorado);
-    -webkit-text-stroke:1.5px var(--tinta);
-    line-height:1;
-    margin-bottom:8px;
-  }
   .section-title{
     font-size:clamp(1.7rem, 3.4vw, 2.4rem);
     font-weight:600;
@@ -149,7 +141,6 @@
   .why-item{ padding:28px 24px; border-right:1px solid var(--linea); }
   .why-item:last-child{ border-right:none; }
   @media (max-width:760px){ .why-item{ border-right:none; border-bottom:1px solid var(--linea); } }
-  .why-item .n{ font-family:'Fraunces',serif; font-size:1.4rem; color:var(--verde); margin-bottom:10px; display:block;}
   .why-item h3{ font-size:1.08rem; font-weight:700; margin-bottom:8px; }
   .why-item p{ font-size:.93rem; line-height:1.55; color:#2c4143; }
 
@@ -396,7 +387,6 @@
     padding:72px 0 56px;
     border-bottom:2px solid var(--tinta);
   }
-  .story-hero .eyebrow-num{ margin-bottom:4px; }
   .story-hero h1{
     font-size:clamp(2.2rem, 5.6vw, 4rem);
     line-height:1.08;
@@ -408,17 +398,11 @@
   .story-hero .lead-block p{ font-size:1.12rem; line-height:1.7; color:#2c4143; }
 
   .story-block{
-    padding:56px 0;
+    padding:40px 0;
     border-bottom:1px solid var(--linea);
-    display:grid; grid-template-columns:.4fr 1fr; gap:40px; align-items:start;
+    max-width:64ch;
   }
   .story-block:last-of-type{ border-bottom:2px solid var(--tinta); }
-  @media (max-width:760px){ .story-block{ grid-template-columns:1fr; gap:16px; } }
-  .story-block .story-num{
-    font-family:'Fraunces', serif;
-    font-size:clamp(3rem, 6vw, 4.5rem);
-    color:var(--dorado); -webkit-text-stroke:1.5px var(--tinta); line-height:1;
-  }
   .story-block h2{ font-size:clamp(1.4rem, 2.6vw, 1.9rem); font-weight:600; margin-bottom:14px; max-width:20ch; }
   .story-block p{ font-size:1.02rem; line-height:1.7; color:#2c4143; max-width:56ch; }
 
