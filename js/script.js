@@ -111,3 +111,132 @@
 
   render();
 })();
+
+// ===== Carrusel "Nuestra filosofía": autoplay + arrastre manual (mouse y touch) =====
+(function(){
+
+  var wrap = document.querySelector('.philosophy-track-wrap');
+  var track = document.querySelector('.philosophy-track');
+  if(!wrap || !track) return;
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var AUTOPLAY_SPEED = 0.9; // px "reales" por frame (se acumulan en un contador propio, ver más abajo)
+  var RESUME_DELAY = 2200; // ms de inactividad antes de retomar el autoplay
+
+  var autoplay = !reduceMotion;
+  var isPointerDragging = false;
+  var isTouching = false;
+  var moved = false;
+  var startX = 0;
+  var startScroll = 0;
+  var resumeTimer = null;
+
+  // wrap.scrollLeft solo acepta enteros: si acumuláramos el avance del autoplay
+  // leyendo y escribiendo scrollLeft en cada frame, un incremento menor a 1px
+  // se redondea siempre para abajo y el carrusel nunca se mueve. Por eso el
+  // autoplay lleva su propio contador flotante, independiente del que usan
+  // el arrastre manual y el scroll nativo (que sí trabajan directo sobre scrollLeft).
+  var virtualScroll = wrap.scrollLeft;
+
+  function syncVirtualScroll(){
+    virtualScroll = wrap.scrollLeft;
+  }
+
+  function pauseAutoplay(){
+    autoplay = false;
+    if(resumeTimer){ clearTimeout(resumeTimer); resumeTimer = null; }
+  }
+  function scheduleResume(){
+    if(reduceMotion) return;
+    if(resumeTimer) clearTimeout(resumeTimer);
+    resumeTimer = setTimeout(function(){ syncVirtualScroll(); autoplay = true; }, RESUME_DELAY);
+  }
+
+  // Mantiene el scroll dentro del primer set de slides: al llegar a la mitad
+  // (donde empieza el set duplicado) lo reubica al inicio, sin salto visible.
+  function keepLooped(){
+    var half = track.scrollWidth / 2;
+    if(half <= 0) return;
+    if(wrap.scrollLeft >= half){
+      wrap.scrollLeft -= half;
+    } else if(wrap.scrollLeft < 0){
+      wrap.scrollLeft += half;
+    }
+  }
+
+  function tick(){
+    if(autoplay && !isPointerDragging && !isTouching){
+      var half = track.scrollWidth / 2;
+      virtualScroll += AUTOPLAY_SPEED;
+      if(half > 0 && virtualScroll >= half){ virtualScroll -= half; }
+      wrap.scrollLeft = Math.round(virtualScroll);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // --- Arrastre con mouse (Pointer Events, sin táctil: el táctil ya scrollea nativo) ---
+  // Importante: NO se captura el puntero en pointerdown. Si se captura de entrada,
+  // el click posterior (down+up sin mover) queda "dirigido" al wrap en vez de al
+  // link de la tarjeta, y el botón "Conocé toda la historia" deja de navegar aun
+  // en un click normal. Por eso el arrastre (y la captura) solo arranca cuando
+  // el mouse se mueve más de unos pocos px — un click simple nunca lo activa.
+  wrap.addEventListener('pointerdown', function(e){
+    if(e.pointerType === 'touch') return;
+    isPointerDragging = true;
+    moved = false;
+    pauseAutoplay();
+    startX = e.clientX;
+    startScroll = wrap.scrollLeft;
+  });
+
+  wrap.addEventListener('pointermove', function(e){
+    if(!isPointerDragging) return;
+    var dx = e.clientX - startX;
+    if(!moved && Math.abs(dx) > 3){
+      moved = true;
+      wrap.classList.add('is-dragging');
+      try{ wrap.setPointerCapture(e.pointerId); }catch(err){}
+    }
+    if(moved){
+      wrap.scrollLeft = startScroll - dx;
+      keepLooped();
+    }
+  });
+
+  function endPointerDrag(){
+    if(!isPointerDragging) return;
+    isPointerDragging = false;
+    wrap.classList.remove('is-dragging');
+    syncVirtualScroll();
+    scheduleResume();
+  }
+  wrap.addEventListener('pointerup', endPointerDrag);
+  wrap.addEventListener('pointercancel', endPointerDrag);
+  wrap.addEventListener('pointerleave', endPointerDrag);
+
+  // Evita que un arrastre termine "clickeando" el botón de la última foto
+  wrap.addEventListener('click', function(e){
+    if(moved){ e.preventDefault(); e.stopPropagation(); moved = false; }
+  }, true);
+
+  // --- Táctil: usamos el scroll nativo del navegador (más fluido), solo pausamos el autoplay ---
+  wrap.addEventListener('touchstart', function(){ isTouching = true; pauseAutoplay(); }, {passive:true});
+  wrap.addEventListener('touchend', function(){ isTouching = false; syncVirtualScroll(); scheduleResume(); }, {passive:true});
+  wrap.addEventListener('touchcancel', function(){ isTouching = false; syncVirtualScroll(); scheduleResume(); }, {passive:true});
+
+  // Cualquier scroll (touch, trackpad, teclado) mantiene el loop correcto y sincroniza el contador
+  wrap.addEventListener('scroll', function(){ keepLooped(); syncVirtualScroll(); }, {passive:true});
+
+  // Pausa al pasar el mouse por encima (desktop), retoma al salir
+  wrap.addEventListener('mouseenter', pauseAutoplay);
+  wrap.addEventListener('mouseleave', function(){ if(!isPointerDragging) scheduleResume(); });
+
+  // Pausa cuando la pestaña no está visible, por performance
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden){ pauseAutoplay(); }
+    else if(!isPointerDragging && !isTouching){ syncVirtualScroll(); autoplay = !reduceMotion; }
+  });
+
+  requestAnimationFrame(tick);
+})();

@@ -142,20 +142,24 @@
 
   .philosophy-track-wrap{
     margin-top:32px;
-    overflow:hidden;
+    overflow-x:auto;
+    overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;
+    cursor:grab;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
     -webkit-mask-image:linear-gradient(to right, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%);
     mask-image:linear-gradient(to right, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%);
   }
+  .philosophy-track-wrap::-webkit-scrollbar{ display:none; }
+  .philosophy-track-wrap.is-dragging{ cursor:grabbing; scroll-behavior:auto; }
   .philosophy-track{
     display:flex;
     width:max-content;
-    animation:philosophy-scroll 38s linear infinite;
     will-change:transform;
-  }
-  .philosophy-track-wrap:hover .philosophy-track{ animation-play-state:paused; }
-  @keyframes philosophy-scroll{
-    from{ transform:translateX(0); }
-    to{ transform:translateX(-50%); }
+    user-select:none;
+    -webkit-user-select:none;
   }
 
   .philosophy-slide{
@@ -169,6 +173,8 @@
   }
   .philosophy-slide img{
     width:100%; height:100%; object-fit:cover; display:block;
+    -webkit-user-drag:none;
+    pointer-events:none;
   }
   .philosophy-slide::after{
     content:"";
@@ -195,11 +201,7 @@
   }
 
   @media (prefers-reduced-motion: reduce){
-    .philosophy-track{ animation:none; }
-    .philosophy-track-wrap{
-      overflow-x:auto; -webkit-overflow-scrolling:touch;
-      scroll-snap-type:x mandatory;
-    }
+    .philosophy-track-wrap{ scroll-snap-type:x mandatory; }
     .philosophy-slide{ scroll-snap-align:start; }
     .philosophy-slide[aria-hidden="true"]{ display:none; }
   }
