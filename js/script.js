@@ -112,17 +112,54 @@
   render();
 })();
 
-// ===== Carrusel "Nuestra filosofía": autoplay + arrastre manual (mouse y touch) =====
+// ===== Carrusel "Nuestra filosofía": loop infinito + autoplay + arrastre manual (mouse y touch) =====
 (function(){
 
   var wrap = document.querySelector('.philosophy-track-wrap');
-  var track = document.querySelector('.philosophy-track');
+  var track = document.getElementById('philosophyTrack');
   if(!wrap || !track) return;
+
+  var originalGroup = track.querySelector('.philosophy-group');
+  if(!originalGroup) return;
 
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   var AUTOPLAY_SPEED = 0.9; // px "reales" por frame (se acumulan en un contador propio, ver más abajo)
   var RESUME_DELAY = 2200; // ms de inactividad antes de retomar el autoplay
+
+  // Ancho de UNA vuelta completa de fotos (las 4 originales). Es el valor que
+  // usamos para "dar la vuelta" del loop.
+  var groupWidth = 0;
+
+  // En pantallas anchas, con un solo grupo duplicado el navegador llega al
+  // final físico del scroll ANTES del punto donde reiniciamos el ciclo
+  // (el final real queda más cerca que la mitad necesaria), y el carrusel
+  // se siente "cortado" en vez de infinito. La solución: clonar el grupo de
+  // fotos las veces que hagan falta según el ancho de pantalla, para que
+  // siempre sobre margen de sobra antes de tocar el final real.
+  function ensureEnoughCopies(){
+    groupWidth = originalGroup.getBoundingClientRect().width;
+    if(!groupWidth) return;
+
+    var needed = Math.ceil(wrap.clientWidth / groupWidth) + 2; // +2 grupos de margen
+    var current = track.querySelectorAll('.philosophy-group').length;
+
+    for(var i = current; i < needed; i++){
+      var clone = originalGroup.cloneNode(true);
+      clone.setAttribute('aria-hidden', 'true');
+      var imgs = clone.querySelectorAll('img');
+      for(var j = 0; j < imgs.length; j++){ imgs[j].setAttribute('alt', ''); }
+      var links = clone.querySelectorAll('a');
+      for(var k = 0; k < links.length; k++){ links[k].setAttribute('tabindex', '-1'); }
+      track.appendChild(clone);
+    }
+  }
+
+  var resizeTimer = null;
+  function onResize(){
+    if(resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(ensureEnoughCopies, 200);
+  }
 
   var autoplay = !reduceMotion;
   var isPointerDragging = false;
@@ -153,23 +190,27 @@
     resumeTimer = setTimeout(function(){ syncVirtualScroll(); autoplay = true; }, RESUME_DELAY);
   }
 
-  // Mantiene el scroll dentro del primer set de slides: al llegar a la mitad
-  // (donde empieza el set duplicado) lo reubica al inicio, sin salto visible.
+  // Reubica el scroll dentro de una "vuelta" (groupWidth) para que el ciclo
+  // se sienta infinito. Devuelve cuánto se corrigió, para poder reacomodar
+  // también la referencia del arrastre manual (ver pointermove).
   function keepLooped(){
-    var half = track.scrollWidth / 2;
-    if(half <= 0) return;
-    if(wrap.scrollLeft >= half){
-      wrap.scrollLeft -= half;
-    } else if(wrap.scrollLeft < 0){
-      wrap.scrollLeft += half;
+    if(groupWidth <= 0) return 0;
+    var totalDelta = 0;
+    while(wrap.scrollLeft >= groupWidth){
+      wrap.scrollLeft -= groupWidth;
+      totalDelta -= groupWidth;
     }
+    while(wrap.scrollLeft < 0){
+      wrap.scrollLeft += groupWidth;
+      totalDelta += groupWidth;
+    }
+    return totalDelta;
   }
 
   function tick(){
-    if(autoplay && !isPointerDragging && !isTouching){
-      var half = track.scrollWidth / 2;
+    if(autoplay && !isPointerDragging && !isTouching && groupWidth > 0){
       virtualScroll += AUTOPLAY_SPEED;
-      if(half > 0 && virtualScroll >= half){ virtualScroll -= half; }
+      if(virtualScroll >= groupWidth){ virtualScroll -= groupWidth; }
       wrap.scrollLeft = Math.round(virtualScroll);
     }
     requestAnimationFrame(tick);
@@ -200,7 +241,12 @@
     }
     if(moved){
       wrap.scrollLeft = startScroll - dx;
-      keepLooped();
+      // Si el arrastre cruzó el punto de reinicio del loop, la referencia
+      // "startScroll" tiene que correrse lo mismo: si no, el próximo
+      // pointermove recalcula sobre la posición vieja (sin loopear) y el
+      // scroll termina pegado contra el final real del navegador.
+      var delta = keepLooped();
+      if(delta) startScroll += delta;
     }
   });
 
@@ -232,11 +278,14 @@
   wrap.addEventListener('mouseenter', pauseAutoplay);
   wrap.addEventListener('mouseleave', function(){ if(!isPointerDragging) scheduleResume(); });
 
+  window.addEventListener('resize', onResize);
+
   // Pausa cuando la pestaña no está visible, por performance
   document.addEventListener('visibilitychange', function(){
     if(document.hidden){ pauseAutoplay(); }
     else if(!isPointerDragging && !isTouching){ syncVirtualScroll(); autoplay = !reduceMotion; }
   });
 
+  ensureEnoughCopies();
   requestAnimationFrame(tick);
 })();

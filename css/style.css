@@ -161,6 +161,10 @@
     user-select:none;
     -webkit-user-select:none;
   }
+  .philosophy-group{
+    display:flex;
+    flex:0 0 auto;
+  }
 
   .philosophy-slide{
     position:relative;
@@ -203,7 +207,7 @@
   @media (prefers-reduced-motion: reduce){
     .philosophy-track-wrap{ scroll-snap-type:x mandatory; }
     .philosophy-slide{ scroll-snap-align:start; }
-    .philosophy-slide[aria-hidden="true"]{ display:none; }
+    .philosophy-group[aria-hidden="true"]{ display:none; }
   }
 
   /* dropcap intro */
