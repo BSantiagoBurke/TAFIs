@@ -230,6 +230,16 @@
   @media (max-width:900px){ .builder{ grid-template-columns:1fr; } }
 
   .flavor-picker{ border-top:1px solid var(--linea); }
+  .flavor-legend{
+    display:flex; align-items:baseline; justify-content:space-between;
+    gap:12px;
+    padding:0 4px 10px;
+    font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+    color:#5c7072;
+  }
+  .flavor-legend .legend-note{
+    text-transform:none; font-weight:500; letter-spacing:0; opacity:.8;
+  }
   .flavor-row{
     display:flex; align-items:center; justify-content:space-between;
     padding:14px 4px;
