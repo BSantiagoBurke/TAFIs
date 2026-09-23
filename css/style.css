@@ -231,8 +231,7 @@
 
   .flavor-picker{ border-top:1px solid var(--linea); }
   .flavor-legend{
-    display:flex; align-items:baseline; justify-content:space-between;
-    gap:12px;
+    display:flex; align-items:baseline; justify-content:flex-end;
     padding:0 4px 10px;
     font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
     color:#5c7072;
