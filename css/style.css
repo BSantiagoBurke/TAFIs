@@ -10,6 +10,7 @@
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   html{scroll-behavior:smooth;}
+  button, a{ touch-action:manipulation; }
   body{
     background:var(--crema);
     color:var(--tinta);
@@ -176,6 +177,7 @@
   .stepper button{
     width:34px; height:34px; border:none; background:var(--marfil); color:var(--tinta);
     font-size:1.1rem; font-weight:700; cursor:pointer;
+    touch-action:manipulation; -webkit-user-select:none; user-select:none;
   }
   .stepper button:hover{ background:var(--dorado); }
   .stepper .qty{ width:46px; text-align:center; font-weight:800; font-size:.95rem; }
